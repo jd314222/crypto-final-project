@@ -146,7 +146,10 @@ def aes_encrypt(session_key: bytes, plaintext: bytes):
     # Encrypt plaintext using AES-GCM.
     #
     # hint: https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM
-    raise NotImplementedError("TODO 6 not implemented: aes_encrypt()")
+    aesgcm = AESGCM(session_key)
+    nonce = os.urandom(12)
+    ciphertext = aesgcm.encrypt(nonce, plaintext, aad=None)
+    return nonce, ciphertext
 
 
 def aes_decrypt(session_key: bytes, nonce: bytes, ciphertext: bytes) -> bytes:
@@ -154,7 +157,9 @@ def aes_decrypt(session_key: bytes, nonce: bytes, ciphertext: bytes) -> bytes:
     # Decrypt ciphertext using AES-GCM.
     #
     # hint: https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM
-    raise NotImplementedError("TODO 7 not implemented: aes_decrypt()")
+    aesgcm = AESGCM(session_key)
+    plaintext = aesgcm.decrypt(nonce, ciphertext, aad=None)
+    return plaintext
 
 
 def ensure_user_keys(username: str):
