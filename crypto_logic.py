@@ -109,7 +109,17 @@ def rsa_encrypt(public_key, plaintext: bytes) -> bytes:
     # Hint: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/
     #   
     #
-    raise NotImplementedError("TODO 4 not implemented: rsa_encrypt()")
+
+    # Following exact same encryption process as in docs using OAEP
+    ciphertext = public_key.encrypt(
+        plaintext,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return ciphertext
 
 
 def rsa_decrypt(private_key, ciphertext: bytes) -> bytes:
@@ -118,7 +128,17 @@ def rsa_decrypt(private_key, ciphertext: bytes) -> bytes:
     #
     # Hint: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/
     #   
-    raise NotImplementedError("TODO 5 not implemented: rsa_decrypt()")
+
+    # Following exact same decryption process as in docs using OAEP
+    plaintext = private_key.decrypt(
+        ciphertext,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return plaintext
 
 
 def aes_encrypt(session_key: bytes, plaintext: bytes):
