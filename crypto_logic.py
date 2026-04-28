@@ -146,10 +146,11 @@ def aes_encrypt(session_key: bytes, plaintext: bytes):
     # Encrypt plaintext using AES-GCM.
     #
     # hint: https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM
+    # Following docs, get the aesgcm and make sure you return the encrypted ciphertext
     aesgcm = AESGCM(session_key)
     nonce = os.urandom(12)
-    ciphertext = aesgcm.encrypt(nonce, plaintext, aad=None)
-    return nonce, ciphertext
+    ciphertext = aesgcm.encrypt(nonce, plaintext, associated_data=None)
+    return nonce, ciphertext # need to return nonce
 
 
 def aes_decrypt(session_key: bytes, nonce: bytes, ciphertext: bytes) -> bytes:
@@ -157,8 +158,9 @@ def aes_decrypt(session_key: bytes, nonce: bytes, ciphertext: bytes) -> bytes:
     # Decrypt ciphertext using AES-GCM.
     #
     # hint: https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM
+    # Following docs, get the aesgcm and make sure you return the decrypted plaintext
     aesgcm = AESGCM(session_key)
-    plaintext = aesgcm.decrypt(nonce, ciphertext, aad=None)
+    plaintext = aesgcm.decrypt(nonce, ciphertext, associated_data=None)
     return plaintext
 
 
@@ -201,13 +203,18 @@ def create_encrypted_packet(sender: str, recipient_public_key_pem: bytes, messag
     #
     # Very Important:
     # Do not change the field names.
+
+    session_key = AESGCM.generate_key(bit_length=128) # went with 128 bits cause that was in the example docs
+    public_key = load_public_key_from_pem(recipient_public_key_pem)
+    nonce, encrypted_message = aes_encrypt(session_key, message_text.encode("utf-8")) # encoding to bytes before passing it to aes encrypt
+    encrypted_session_key = rsa_encrypt(public_key, session_key)
+
     return {
         "type": "encrypted_message",
         "from": sender,
-        "nonce": "",
-        "encrypted_session_key": "",
-        "encrypted_message": "",
-        "student_note": "TODO 8 not implemented: create_encrypted_packet()",
+        "nonce": b64e(nonce),
+        "encrypted_session_key": b64e(encrypted_session_key),
+        "encrypted_message": b64e(encrypted_message),
     }
 
 
@@ -229,4 +236,11 @@ def decrypt_packet_for_user(username: str, packet: dict) -> str:
     #   5.Use your private key to decrypt the session key.
     #   6.Use the session key and nonce to decrypt the message using AES-GCM.
     #   7.Convert the decrypted message into readable text and return it.
-    raise NotImplementedError("TODO 9 not implemented: decrypt_packet_for_user()")
+
+    private_key = load_private_key(username)
+    decoded_nonce = base64.b64decode(packet["nonce"])
+    decoded_session_key = base64.b64decode(packet["encrypted_session_key"])
+    decoded_message = base64.b64decode(packet["encrypted_message"])
+    session_key = rsa_decrypt(private_key, decoded_session_key)
+    message = aes_decrypt(session_key, decoded_nonce, decoded_message)
+    return message.decode() # utf-8 is default decoding
