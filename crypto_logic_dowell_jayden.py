@@ -34,7 +34,6 @@ def b64d(data: str) -> bytes:
 
 
 def generate_rsa_keypair():
-    # TODO 1:
     # Generate an RSA-2048 private key.
     # public_exponent=65537, key_size=2048
     # 
@@ -78,7 +77,6 @@ def save_keys(username: str, private_pem: bytes, public_pem: bytes):
 
 
 def load_private_key(username: str):
-    # TODO 2:
     # Read the private key PEM file and return the loaded private key object.
     # hints: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
     #
@@ -97,7 +95,6 @@ def load_public_pem(username: str) -> bytes:
 
 
 def load_public_key_from_pem(public_pem: bytes):
-    # TODO 3:
     # Convert PEM bytes into a public key object.
     #
     # hints: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
@@ -107,7 +104,6 @@ def load_public_key_from_pem(public_pem: bytes):
 
 
 def rsa_encrypt(public_key, plaintext: bytes) -> bytes:
-    # TODO 4:
     # Encrypt plaintext using RSA-OAEP with SHA-256.
     #
     # Hint: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/
@@ -127,7 +123,6 @@ def rsa_encrypt(public_key, plaintext: bytes) -> bytes:
 
 
 def rsa_decrypt(private_key, ciphertext: bytes) -> bytes:
-    # TODO 5:
     # Decrypt ciphertext using RSA-OAEP with SHA-256.
     #
     # Hint: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/
@@ -146,7 +141,6 @@ def rsa_decrypt(private_key, ciphertext: bytes) -> bytes:
 
 
 def aes_encrypt(session_key: bytes, plaintext: bytes):
-    # TODO 6:
     # Encrypt plaintext using AES-GCM.
     #
     # hint: https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM
@@ -158,7 +152,6 @@ def aes_encrypt(session_key: bytes, plaintext: bytes):
 
 
 def aes_decrypt(session_key: bytes, nonce: bytes, ciphertext: bytes) -> bytes:
-    # TODO 7:
     # Decrypt ciphertext using AES-GCM.
     #
     # hint: https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.AESGCM
@@ -184,7 +177,6 @@ def ensure_user_keys(username: str):
             if not pub_path.exists():
                 pub_path.write_bytes(b"")
 
-# BONUS STUFF STARTS HERE
 def sign_message(username: str, packet_data: bytes):
     # must load the private key, and this sign it with RSA PSS
     private_key = load_private_key(username)
@@ -217,10 +209,7 @@ def verify_signature(sender: str, signature: bytes, packet_data: bytes):
         # Catching digital signature failure
         raise Exception("Digital Signature verification has failed.")
 
-# BONUS STUFF ENDS HERE
-
 def create_encrypted_packet(sender: str, recipient_public_key_pem: bytes, message_text: str) -> dict:
-    # TODO 8:
     # Create the encrypted packet using hybrid encryption.
     #
     # Steps:
@@ -271,13 +260,6 @@ def create_encrypted_packet(sender: str, recipient_public_key_pem: bytes, messag
 
 
 def decrypt_packet_for_user(username: str, packet: dict) -> str:
-    # Temporary placeholder behavior:
-    # If TODO 8 was not implemented, the packet will include student_note.
-    note = packet.get("student_note")
-    if note:
-        return f"[NOT IMPLEMENTED YET] {note}"
-
-    # TODO 9:
     # Decrypt the delivered packet.
     #
     # Steps:
