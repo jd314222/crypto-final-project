@@ -8,14 +8,28 @@ This project is a secure chat application that implements true End-to-End Encryp
 2. **Key Exchange:** The AES session key is securely wrapped using the recipient's **RSA Public Key (with OAEP padding)**.
 3. **Authenticity & Integrity:** The entire packet is digitally signed using the sender's **RSA Private Key (with PSS padding)** before transit. If a Man-in-the-Middle (or the server) tampers with the message, the signature validation will fail and the client will actively reject the packet.
 
-## Requirements
-* Python 3
-* `cryptography` library
+## Setup & Requirements
+This project requires Python 3. It is highly recommended to set up a virtual environment to manage dependencies:
 
-To install the required library, run:
-```bash
-pip install cryptography
-```
+1. **Create a virtual environment:**
+   ```bash
+   python3 -m venv .venv
+   ```
+
+2. **Activate the virtual environment:**
+   * On Mac/Linux:
+     ```bash
+     source .venv/bin/activate
+     ```
+   * On Windows:
+     ```bash
+     .venv\Scripts\activate
+     ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## How to Run
 
