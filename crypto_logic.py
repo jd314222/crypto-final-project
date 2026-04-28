@@ -12,6 +12,10 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.exceptions import InvalidSignature
+
+# to ensure that the dictionaries are converted to strings properly
+import json
 
 
 DATA_DIR = Path("e2ee_data")
@@ -180,6 +184,40 @@ def ensure_user_keys(username: str):
             if not pub_path.exists():
                 pub_path.write_bytes(b"")
 
+# BONUS STUFF STARTS HERE
+def sign_message(username: str, packet_data: bytes):
+    # must load the private key, and this sign it with RSA PSS
+    private_key = load_private_key(username)
+    signature = private_key.sign(
+        packet_data,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    return signature
+
+
+def verify_signature(sender: str, signature: bytes, packet_data: bytes):
+    public_key_pem = load_public_pem(sender)
+    public_key = load_public_key_from_pem(public_key_pem)
+
+    try:
+        public_key.verify(
+            signature,
+            packet_data,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+    except InvalidSignature:
+        # Catching digital signature failure
+        raise Exception("Digital Signature verification has failed.")
+
+# BONUS STUFF ENDS HERE
 
 def create_encrypted_packet(sender: str, recipient_public_key_pem: bytes, message_text: str) -> dict:
     # TODO 8:
@@ -209,12 +247,26 @@ def create_encrypted_packet(sender: str, recipient_public_key_pem: bytes, messag
     nonce, encrypted_message = aes_encrypt(session_key, message_text.encode("utf-8")) # encoding to bytes before passing it to aes encrypt
     encrypted_session_key = rsa_encrypt(public_key, session_key)
 
+    packet = {
+        "type": "encrypted_message",
+        "from": sender,
+        "nonce": b64e(nonce),
+        "encrypted_session_key": b64e(encrypted_session_key),
+        "encrypted_message": b64e(encrypted_message),
+        "digital_signature": None,
+    }
+
+    packet_str = json.dumps(packet, sort_keys=True)
+
+    signature = sign_message(sender, packet_str.encode('utf-8'))
+
     return {
         "type": "encrypted_message",
         "from": sender,
         "nonce": b64e(nonce),
         "encrypted_session_key": b64e(encrypted_session_key),
         "encrypted_message": b64e(encrypted_message),
+        "digital_signature": b64e(signature),
     }
 
 
@@ -237,6 +289,18 @@ def decrypt_packet_for_user(username: str, packet: dict) -> str:
     #   6.Use the session key and nonce to decrypt the message using AES-GCM.
     #   7.Convert the decrypted message into readable text and return it.
 
+    # Signature Validation
+    # We need to get the packet prior to having the digital signature to verify it
+    init_packet = dict(packet)
+    init_packet["digital_signature"] = None
+    packet_data = json.dumps(init_packet, sort_keys=True).encode('utf-8')
+
+    sender = packet["from"]
+    signature = base64.b64decode(packet["digital_signature"])
+    
+    verify_signature(sender, signature, packet_data)
+
+    # Message Decryption
     private_key = load_private_key(username)
     decoded_nonce = base64.b64decode(packet["nonce"])
     decoded_session_key = base64.b64decode(packet["encrypted_session_key"])
