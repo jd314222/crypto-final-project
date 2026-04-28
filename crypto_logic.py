@@ -51,7 +51,7 @@ def generate_rsa_keypair():
     # serializing to PEM
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS12,
+        format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
     )
 
@@ -79,7 +79,12 @@ def load_private_key(username: str):
     # hints: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
     #
     # htins: https://docs.python.org/3/library/pathlib.html#pathlib.Path.read_bytes
-    raise NotImplementedError("TODO 2 not implemented: load_private_key()")
+    ensure_data_dir()
+    pem_data = (DATA_DIR / f"{username}_private.pem").read_bytes()
+    
+    # Loading the private key from the pem_data as shown in docs
+    private_key = serialization.load_pem_private_key(pem_data, password=None)
+    return private_key
 
 
 def load_public_pem(username: str) -> bytes:
@@ -92,7 +97,9 @@ def load_public_key_from_pem(public_pem: bytes):
     # Convert PEM bytes into a public key object.
     #
     # hints: https://cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/
-    raise NotImplementedError("TODO 3 not implemented: load_public_key_from_pem()")
+
+    public_key = serialization.load_pem_public_key(public_pem)
+    return public_key
 
 
 def rsa_encrypt(public_key, plaintext: bytes) -> bytes:
